@@ -324,7 +324,3 @@ binary-arch: build-arch install
 binary: binary-indep binary-arch
 
 .PHONY: binary binary-arch binary-indep build clean install install-basic install-mpich install-openmpi install-manual
-
-override_dh_installchangelogs:
-	dh_installchangelogs debian/changelog_sid
-
