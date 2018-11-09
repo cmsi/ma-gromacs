@@ -1,0 +1,77 @@
+GROMACS for Debian
+------------------
+
+The basic 'gromacs' package contains only single-threaded binaries.  For
+multiple threads or machines, you will need the MPI-enabled version of mdrun.
+Depending on your MPI implementation of choice, install either the
+'gromacs-openmpi' or 'gromacs-mpich'.
+
+If you are setting up an MPI installation for the first time and have no
+existing preference, then 'gromacs-openmpi' is your best choice.  OpenMPI is
+currently the most active MPI development project, and has incorporated several
+other MPI implementations under its umbrella.  Also consider installing the
+'openmpi-doc' package for additional documentation.  OpenMPI has superseded the
+LAM-MPI project.
+
+'gromacs-mpich' supports the MPICH3 implementation.  Although less commonly
+used in the GROMACS community than OpenMPI (and its predecessor LAM), it does
+support more architectures and also has an active developer base.
+
+Both of the MPI packages install their version of 'mdrun' as 'mdrun_mpi', so
+you can keep both regular and MPI binaries on the same machine.  See the README
+files in /usr/share/doc/gromacs-openmpi or /usr/share/doc/gromacs-mpich (when
+installed) for additional information.
+
+Finally, the MPI packages can be installed independently of the main 
+gromacs package, and unlike the main package, do not require the X Window
+System to be installed.  This makes them suitable for installation on a
+large cluster, where you only intend to do serious number-crunching on
+that node and perform all interactive tasks on another machine.
+
+
+Additional Documentation
+------------------------
+In addition to the documentation included in this package, the GROMACS
+website contains several additional manuals, tutorials, and checklists of
+use to all skill levels, at <http://www.gromacs.org/Documentation>.
+
+
+demux.pl and xplor2gmx.pl
+-------------------------
+You may see references to these scripts on the GROMACS mailing lists.
+In this package, they have been renamed without their suffixes: demux
+and xplor2gmx.
+
+
+Double Precision Binaries
+-------------------------
+The standard version of all binaries have been compiled for single-
+precision floating point operations.  For some applications, this may
+result in unacceptably large numeric instabilities.  Double-precision
+calculations can often solve such problems, with a tradeoff in speed
+(typically a ~30% slowdown on i386).  Binaries compiled for DP have a
+"_d" suffix, and in all other ways operate identically to their single-
+precision counterparts.
+
+
+CPU Optimizations
+-----------------
+On amd64 and i386 architectures, the compiler is restricted to SSE2 extensions.
+Some systems may have additional SIMD extensions available that can speed
+execution by large amounts, but are not available on all CPUs of that
+architecture (e.g. AVX extensions on amd64 that are only present on Intel's
+Sandy Bridge or AMD Bulldozer and subsequent chips).  To compile a package with
+autodetection of available extensions, use the environment variable
+DEB_BUILD_OPTIONS=cpuopt .
+
+This choice of default should work on all amd64 CPUs, and i386 CPUs from the
+Intel Pentium 4 or AMD Opteron/Athlon 64 and forward (roughly speaking, all new
+systems since 2001).  Although this does exclude certain very old i386 systems,
+the performance tradeoffs from disabling SSE2 are severe; you may not get much
+performance-per-watt on such CPUs.  On such CPUs, compiling your own binaries
+is mandatory.
+
+For more information about GROMACS and CPU acceleration, please see
+<http://www.gromacs.org/Documentation/Acceleration_and_parallelization>.
+
+ -- Nicholas Breen <nbreen@debian.org>, Fri, 15 Nov 2013 11:12:19 -0800

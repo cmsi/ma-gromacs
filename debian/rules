@@ -1,0 +1,330 @@
+#!/usr/bin/make -f
+#
+# build script for GROMACS
+
+PACKAGE := gromacs
+
+DEB_HOST_ARCH      ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_ARCH_CPU  ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+DEB_HOST_ARCH_OS   ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_OS)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+# add hardening flags, using dpkg-buildflags
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
+#653916 and http://www.cmake.org/Bug/view.php?id=12928
+CFLAGS   += $(CPPFLAGS)
+CXXFLAGS += $(CPPFLAGS)
+
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -g -Wall
+endif
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+endif
+
+LDFLAGS += -Wl,--as-needed
+
+COMMON_CONFIG_PARAMS = \
+	$(CURDIR) \
+	-DCMAKE_VERBOSE_MAKEFILE=ON \
+	-DCMAKE_RULE_MESSAGES=OFF \
+	-DCMAKE_INSTALL_PREFIX="/usr" \
+	-DCMAKE_EXE_LINKER_FLAGS="$(LDFLAGS)" \
+	-DCMAKE_SKIP_RPATH=ON \
+	-DGMX_EXTERNAL_ZLIB=ON
+
+# For compatibility reasons, disable SIMD CPU optimizations EXCEPT
+# for SSE2 on x86/amd64, VSX on ppc64el, and NEON on armhf/arm64.
+# For local compilations, set DEB_BUILD_OPTIONS=cpuopt for automatic
+# detection of the best available option.
+# See http://www.gromacs.org/Documentation/Acceleration_and_parallelization#Acceleration
+# and http://manual.gromacs.org/documentation/2016.3/install-guide/index.html#simd-support
+ifeq (,$(findstring cpuopt,$(DEB_BUILD_OPTIONS)))
+ifeq ($(DEB_HOST_ARCH_CPU), i386)
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=SSE2
+else ifeq ($(DEB_HOST_ARCH_CPU), amd64)
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=SSE2
+else ifeq ($(DEB_HOST_ARCH_CPU), ppc64el)
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=IBM_VSX
+else ifeq ($(DEB_HOST_ARCH_CPU), armhf)
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=ARM_NEON
+else ifeq ($(DEB_HOST_ARCH_CPU), arm64)
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=ARM_NEON_ASIMD
+else
+	COMMON_CONFIG_PARAMS += -DGMX_SIMD=None
+endif
+endif
+
+# Include "gpu" in DEB_BUILD_OPTIONS to build GPU-accelerated binaries as well.
+# This build option is not always well tested, please send comments.
+# You must have the pacakges "nvidia-cuda-toolkit" and "nvidia-cuda-dev"
+# installed. Those are not official build dependencies to keep the package in
+# Debian main!
+#
+# If you use this option, it is strongly recommended that you also set
+# DEB_BUILD_OPTIONS=cpuopt, assuming you are compiling and running on the same
+# machine.
+#
+# Further details at http://www.gromacs.org/GPU_acceleration
+GPU_CONFIG_PARAMS =
+ifneq (,$(findstring gpu,$(DEB_BUILD_OPTIONS)))
+	GPU_CONFIG_PARAMS += -DGMX_GPU=ON
+endif
+
+MPICH_CONFIG_PARAMS = \
+	-DGMX_MPI=ON \
+	-DGMX_X11=OFF \
+	-DGMX_DEFAULT_SUFFIX=OFF \
+	-DMPIEXEC="/usr/bin/mpiexec.mpich" \
+	-DGMX_BUILD_MDRUN_ONLY=ON
+
+OPENMPI_CONFIG_PARAMS = \
+	-DGMX_MPI=ON \
+	-DGMX_X11=OFF \
+	-DGMX_DEFAULT_SUFFIX=OFF \
+	-DCMAKE_EXE_LINKER_FLAGS="-L/usr/lib/openmpi/lib $(LDFLAGS)" \
+	-DMPIEXEC="/usr/bin/mpiexec.openmpi" \
+	-DGMX_BUILD_MDRUN_ONLY=ON
+
+# optional parallel build
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+	MAKE += -j$(NUMJOBS)
+endif
+
+export GTEST_COLOR=no
+export CTEST_OUTPUT_ON_FAILURE=1
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	(mkdir -p build/basic; cd build/basic; cmake $(COMMON_CONFIG_PARAMS) $(GPU_CONFIG_PARAMS) -DGMX_MPI=OFF -DGMX_X11=ON -DBUILD_SHARED_LIBS=ON)
+	(mkdir -p build/basic-dp; cd build/basic-dp; cmake $(COMMON_CONFIG_PARAMS) -DGMX_MPI=OFF -DGMX_X11=ON -DBUILD_SHARED_LIBS=ON -DGMX_DOUBLE=ON)
+	(mkdir -p build/mpich; cd build/mpich; CC=/usr/bin/mpicc.mpich CXX=/usr/bin/mpicxx.mpich cmake \
+	$(COMMON_CONFIG_PARAMS) $(MPICH_CONFIG_PARAMS) $(GPU_CONFIG_PARAMS) -DGMX_BINARY_SUFFIX="_mpi.mpich" -DGMX_LIBS_SUFFIX="_mpi.mpich")
+	(mkdir -p build/mpich-dp; cd build/mpich-dp; CC=/usr/bin/mpicc.mpich CXX=/usr/bin/mpicxx.mpich cmake \
+	$(COMMON_CONFIG_PARAMS) $(MPICH_CONFIG_PARAMS) -DGMX_DOUBLE=ON -DGMX_BINARY_SUFFIX="_mpi_d.mpich" -DGMX_LIBS_SUFFIX="_mpi_d.mpich")
+	(mkdir -p build/openmpi; cd build/openmpi; CC=/usr/bin/mpicc.openmpi CXX=/usr/bin/mpicxx.openmpi cmake \
+	$(COMMON_CONFIG_PARAMS) $(OPENMPI_CONFIG_PARAMS) $(GPU_CONFIG_PARAMS) -DGMX_BINARY_SUFFIX="_mpi.openmpi" -DGMX_LIBS_SUFFIX="_mpi.openmpi")
+	(mkdir -p build/openmpi-dp; cd build/openmpi-dp; CC=/usr/bin/mpicc.openmpi CXX=/usr/bin/mpicxx.openmpi cmake \
+	$(COMMON_CONFIG_PARAMS) $(OPENMPI_CONFIG_PARAMS) -DGMX_DOUBLE=ON -DGMX_BINARY_SUFFIX="_mpi_d.openmpi" -DGMX_LIBS_SUFFIX="_mpi_d.openmpi")
+	touch $@
+
+
+build: build-arch build-indep
+
+build-arch: configure-stamp build-basic build-mpich build-openmpi
+build-indep: build-manual
+
+build-basic: configure-stamp
+	dh_testdir
+	$(MAKE) -C build/basic
+	$(MAKE) -C build/basic-dp
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	$(MAKE) -C build/basic tests
+	(cd build/basic;    LD_LIBRARY_PATH=$(CURDIR)/build/basic/lib    ctest -V)
+	$(MAKE) -C build/basic-dp tests
+	(cd build/basic-dp; LD_LIBRARY_PATH=$(CURDIR)/build/basic-dp/lib ctest -V)
+endif
+	touch $@
+
+build-manual:
+	dh_testdir
+	# Build speedy, stripped-down version just for documentation generation.
+	# Derived from admin/build-docs.sh
+	(mkdir -p build/documentation ; cd build/documentation; \
+	cmake $(CURDIR) -DCMAKE_BUILD_TYPE=Debug -DGMX_OPENMP=OFF -DGMX_SIMD=None -DGMX_GPU=OFF -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DGMX_BUILD_MANUAL=ON)
+	$(MAKE) gmx -C build/documentation
+	# Generate PDF
+	$(MAKE) manual -C build/documentation
+	# Generate HTML
+	# This sometimes seems to work the *second* time?  Still trying to trace it down.
+	$(MAKE) webpage -C build/documentation || \
+	(echo "===== Failed to build documentation, retrying." ; $(MAKE) webpage -C build/documentation )
+
+build-mpich: configure-stamp
+	dh_testdir
+	$(MAKE) -C build/mpich
+	$(MAKE) -C build/mpich-dp
+	sed -e 's/#MPIABBR#/mpich/g' -e 's/#MPIPROG#/MPICH/g' \
+	    < debian/gromacs-parallel.README.Debian.in \
+	    > debian/gromacs-mpich.README.Debian
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+ifneq ($(DEB_HOST_ARCH), armhf)
+	$(MAKE) -C build/mpich tests
+	(cd build/mpich;     LD_LIBRARY_PATH=$(CURDIR)/build/mpich/lib    ctest -V)
+	$(MAKE) -C build/mpich-dp tests
+	(cd build/mpich-dp ; LD_LIBRARY_PATH=$(CURDIR)/build/mpich-dp/lib ctest -V)
+endif
+endif
+	touch $@
+
+build-openmpi: configure-stamp
+	dh_testdir
+	$(MAKE) -C build/openmpi
+	$(MAKE) -C build/openmpi-dp
+	sed -e 's/#MPIABBR#/openmpi/g' -e 's/#MPIPROG#/OpenMPI/g' \
+	    < debian/gromacs-parallel.README.Debian.in \
+	    > debian/gromacs-openmpi.README.Debian
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+ifeq ($(DEB_HOST_ARCH_OS), linux)
+	# above ifeq..linux: See https://bugs.debian.org/839387 for background,
+	# seems to have a specific non-fakeroot failure on hurd/kfreebsd as well?
+	# rsh_agent: https://bugs.debian.org/494046
+	# oversubscribe: https://bugs.debian.org/850229#51
+	$(MAKE) -C build/openmpi tests
+	(cd build/openmpi    ; LD_LIBRARY_PATH=$(CURDIR)/build/openmpi/lib \
+                               OMPI_MCA_plm_rsh_agent=/bin/false \
+                               OMPI_MCA_rmaps_base_oversubscribe=1 \
+	                       GTEST_FILTER="-*ChangingPinningPolicyRequiresCuda" \
+                               ctest -V -E MdrunUtilityMpiUnitTests)
+	$(MAKE) -C build/openmpi-dp tests
+	(cd build/openmpi-dp ; LD_LIBRARY_PATH=$(CURDIR)/build/openmpi-dp/lib \
+                               OMPI_MCA_plm_rsh_agent=/bin/false \
+                               OMPI_MCA_rmaps_base_oversubscribe=1 \
+	                       GTEST_FILTER="-*ChangingPinningPolicyRequiresCuda" \
+                               ctest -V -E MdrunUtilityMpiUnitTests)
+endif
+endif
+	touch $@
+
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -rf build docs/doxygen/*.pyc
+	dh_clean build-basic build-mpich build-openmpi build-manual configure-stamp \
+	         debian/gromacs-mpich.README.Debian debian/gromacs-openmpi.README.Debian
+
+
+install: build-arch install-basic install-mpich install-openmpi
+	dh_testdir
+	dh_testroot
+	dh_prep -pgromacs-data -plibgromacs-dev
+
+	dh_installdirs -pgromacs-data
+	mv $(CURDIR)/debian/gromacs/usr/share/gromacs/top \
+	   $(CURDIR)/debian/gromacs-data/usr/share/gromacs
+	mv $(CURDIR)/debian/gromacs/usr/share/man \
+	   $(CURDIR)/debian/gromacs-data/usr/share/man
+	# some of the default installation directories for documentation and
+	# example shell scripts are not FHS-friendly; move them appropriately
+	mv $(CURDIR)/debian/gromacs/usr/bin/GMXRC* \
+	   $(CURDIR)/debian/gromacs/usr/bin/gmx-completion* \
+	   $(CURDIR)/debian/gromacs-data/usr/share/gromacs/shell-specific
+	chmod 644 $(CURDIR)/debian/gromacs-data/usr/share/gromacs/shell-specific/*
+	dh_link -pgromacs-data usr/share/doc/gromacs/html usr/share/doc/gromacs-data/html
+	dh_link -pgromacs-data usr/share/doc/gromacs/html usr/share/doc/libgromacs-dev/html
+	dh_link -pgromacs-data usr/share/doc/gromacs/html usr/share/doc/libgromacs3/html
+	# this name is also given in documentation
+	dh_link -pgromacs-data usr/share/doc/gromacs-data/copyright usr/share/doc/gromacs-data/COPYING
+	# rename a pair of Perl scripts to drop the .pl extension (Policy 10.4)
+	mv $(CURDIR)/debian/gromacs/usr/bin/demux.pl     $(CURDIR)/debian/gromacs/usr/bin/demux
+	mv $(CURDIR)/debian/gromacs/usr/bin/xplor2gmx.pl $(CURDIR)/debian/gromacs/usr/bin/xplor2gmx
+
+	mkdir -p $(CURDIR)/debian/libgromacs3/usr/lib/$(DEB_HOST_MULTIARCH)
+	mv $(CURDIR)/debian/gromacs/usr/lib/*/*.so.* $(CURDIR)/debian/libgromacs3/usr/lib/$(DEB_HOST_MULTIARCH)/
+
+	dh_installdirs -plibgromacs-dev
+	mv $(CURDIR)/debian/gromacs/usr/include $(CURDIR)/debian/libgromacs-dev/usr/include
+	# catch normal libraries plus all applicable MPI variants
+	mkdir -p $(CURDIR)/debian/libgromacs-dev/usr/lib/$(DEB_HOST_MULTIARCH)
+	mv $(CURDIR)/debian/gromacs/usr/lib/$(DEB_HOST_MULTIARCH)/*.so \
+	   $(CURDIR)/debian/gromacs/usr/lib/$(DEB_HOST_MULTIARCH)/pkgconfig \
+	   $(CURDIR)/debian/libgromacs-dev/usr/lib/$(DEB_HOST_MULTIARCH)/
+	rmdir $(CURDIR)/debian/gromacs/usr/lib/$(DEB_HOST_MULTIARCH) $(CURDIR)/debian/gromacs/usr/lib
+	mv $(CURDIR)/debian/gromacs/usr/share/gromacs/template $(CURDIR)/debian/libgromacs-dev/usr/share/gromacs/template
+	# remaining documentation catch-all
+	mv $(CURDIR)/debian/gromacs/usr/share/gromacs/* $(CURDIR)/debian/gromacs-data/usr/share/doc/gromacs
+	-rmdir $(CURDIR)/debian/gromacs/usr/share/gromacs
+	# what are you doing here?
+	mv $(CURDIR)/debian/gromacs/usr/share/cmake $(CURDIR)/debian/libgromacs-dev/usr/share/gromacs/
+	dh_lintian -pgromacs -pgromacs-data -plibgromacs3
+
+install-manual: build-manual install
+	dh_testdir
+	dh_testroot
+	dh_install -pgromacs-data
+	rdfind -outputname /dev/null -makesymlinks true $(CURDIR)/debian/gromacs-data/usr/share/doc/
+	symlinks -r -s -c $(CURDIR)/debian/gromacs-data/usr/share/doc/
+
+install-basic: build-arch
+	dh_testdir
+	dh_testroot
+	dh_prep -pgromacs
+	dh_installdirs -pgromacs
+	$(MAKE) -C build/basic install DESTDIR=$(CURDIR)/debian/gromacs
+	$(MAKE) -C build/basic-dp install DESTDIR=$(CURDIR)/debian/gromacs
+	dh_installman -pgromacs debian/man/demux.1 debian/man/xplor2gmx.1
+	# gmx(1) -> gmx_d(1)
+	dh_link -pgromacs
+	dh_lintian -pgromacs
+
+install-mpich: build-mpich
+	dh_testdir
+	dh_testroot
+	dh_prep -pgromacs-mpich
+	dh_installdirs -pgromacs-mpich
+	$(MAKE) -C build/mpich install DESTDIR=$(CURDIR)/debian/gromacs-mpich
+	$(MAKE) -C build/mpich-dp install DESTDIR=$(CURDIR)/debian/gromacs-mpich
+	chmod 644 $(CURDIR)/debian/gromacs-mpich/usr/bin/gmx-completion*
+	mv $(CURDIR)/debian/gromacs-mpich/usr/bin/gmx-completion* $(CURDIR)/debian/gromacs-mpich/usr/share/gromacs/shell-specific/
+	dh_installman -pgromacs-mpich debian/man/mdrun_mpi.mpich.1
+	dh_link -pgromacs-mpich usr/share/man/man1/mdrun_mpi.mpich.1.gz usr/share/man/man1/mdrun_mpi_d.mpich.1.gz
+	dh_lintian -pgromacs-mpich
+
+install-openmpi: build-openmpi
+	dh_testdir
+	dh_testroot
+	dh_prep -pgromacs-openmpi
+	dh_installdirs -pgromacs-openmpi
+	$(MAKE) -C build/openmpi install DESTDIR=$(CURDIR)/debian/gromacs-openmpi
+	$(MAKE) -C build/openmpi-dp install DESTDIR=$(CURDIR)/debian/gromacs-openmpi
+	chmod 644 $(CURDIR)/debian/gromacs-openmpi/usr/bin/gmx-completion*
+	mv $(CURDIR)/debian/gromacs-openmpi/usr/bin/gmx-completion* $(CURDIR)/debian/gromacs-openmpi/usr/share/gromacs/shell-specific/
+	# Force-disable RUNPATH - see <https://github.com/open-mpi/ompi/issues/521>
+	# and lintian tag binary-or-shlib-defines-rpath in versions >= 2.5.50
+	chrpath -d $(CURDIR)/debian/gromacs-openmpi/usr/bin/mdrun_mpi*
+	dh_installman -pgromacs-openmpi debian/man/mdrun_mpi.openmpi.1
+	dh_link -pgromacs-openmpi usr/share/man/man1/mdrun_mpi.openmpi.1.gz usr/share/man/man1/mdrun_mpi_d.openmpi.1.gz
+	dh_lintian -pgromacs-openmpi
+
+binary-indep: build-arch build-indep install install-manual
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs -i
+	dh_installdocs -pgromacs-data
+	dh_compress -i -X.pdf
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+binary-arch: build-arch install
+	dh_testdir -a
+	dh_testroot -a
+	dh_installchangelogs -a
+	dh_installdocs -a
+	dh_strip -A
+	dh_compress -a
+	dh_fixperms -a
+	dh_makeshlibs -a
+	dh_shlibdeps -plibgromacs3 -L libgromacs3 -l debian/libgromacs3/usr/lib
+	dh_shlibdeps -pgromacs -L libgromacs3 -l debian/libgromacs3/usr/lib:debian/gromacs/usr/lib
+	dh_shlibdeps -pgromacs-mpich -L gromacs-mpich -l debian/gromacs-mpich/usr/lib
+	dh_shlibdeps -pgromacs-openmpi -L gromacs-openmpi -l debian/gromacs-openmpi/usr/lib
+	dh_gencontrol -a
+	dh_installdeb -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+
+.PHONY: binary binary-arch binary-indep build clean install install-basic install-mpich install-openmpi install-manual
+
+override_dh_installchangelogs:
+	dh_installchangelogs debian/changelog_sid
+

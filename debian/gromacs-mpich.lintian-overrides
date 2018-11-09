@@ -1,0 +1,3 @@
+# Adaptive Resolution Molecular Dynamics Simulation
+gromacs-mpich: spelling-error-in-binary usr/bin/mdrun_mpi.mpich AdResS Address
+gromacs-mpich: spelling-error-in-binary usr/bin/mdrun_mpi_d.mpich AdResS Address

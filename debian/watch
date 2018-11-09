@@ -1,0 +1,5 @@
+# See uscan(1) for format
+
+version=3
+opts=pasv,uversionmangle=s/[-_]((pre|beta|rc)[^.]+)/~$1/ \
+ftp://ftp.gromacs.org/pub/gromacs/gromacs-([\d\.betaprc_-]*)\.tar\.gz

@@ -1,0 +1,19 @@
+Description: Fix documentation FTBFS with doxygen >= 1.8.11
+Author: Nicholas Breen
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=815678
+Last-Update: Mon, 06 Jun 2016 08:22:42 -0700
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: gromacs-2016~beta2/docs/doxygen/gmxtree.py
+===================================================================
+--- gromacs-2016~beta2.orig/docs/doxygen/gmxtree.py
++++ gromacs-2016~beta2/docs/doxygen/gmxtree.py
+@@ -912,7 +912,7 @@ class GromacsTree(object):
+                 continue
+             dirdoc = filedoc.get_directory()
+             if not dirdoc:
+-                self._reporter.xml_assert(filedoc.get_xml_path(),
++                self._reporter.xml_assert(filedoc._get_xml_path(),
+                         "file is not in any directory in Doxygen")
+                 continue
+             relpath = self._get_rel_path(path)

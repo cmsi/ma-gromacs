@@ -1,0 +1,3 @@
+# Adaptive Resolution Molecular Dynamics Simulation
+gromacs-openmpi: spelling-error-in-binary usr/bin/mdrun_mpi.openmpi AdResS Address
+gromacs-openmpi: spelling-error-in-binary usr/bin/mdrun_mpi_d.openmpi AdResS Address

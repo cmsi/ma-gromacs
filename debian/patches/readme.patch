@@ -1,0 +1,26 @@
+Description: Edit README to explain that this is not an official upstream build
+Origin: vendor
+Author: Nicholas Breen <nbreen@debian.org>
+
+--- a/README
++++ b/README
+@@ -1,5 +1,5 @@
+ 
+-               Welcome to the official version of GROMACS!
++               Welcome to the Debian version of GROMACS!
+ 
+ If you are familiar with Unix, it should be fairly trivial to compile and
+ install GROMACS. GROMACS uses only the CMake build sytem, and our
+@@ -41,6 +41,12 @@ derived work. It should not use the name
+ sure support questions are directed to you instead of the GROMACS developers.
+ Sorry for the hard wording, but it is meant to protect YOUR reseach results!
+ 
+++----------------------------------------------------------------------------+
++| Debian users: that means the Bug Tracking System, http://bugs.debian.org/  |
++| (Although this IS technically a derived version, no significant changes    |
++|  have been made to the upstream code -- it should behave identically.)     |
+++----------------------------------------------------------------------------+
++
+                                * * * * *
+ 
+ The development of GROMACS is mainly funded by academic research grants. 

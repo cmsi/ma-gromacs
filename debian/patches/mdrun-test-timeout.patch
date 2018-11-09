@@ -1,0 +1,20 @@
+Description: Extend timeout for mdrun tests
+ Slower architectures, especially those without FPUs, may timeout on the
+ mdrun tests - extending the timeout modestly allows them to pass.
+Origin: vendor
+Last-Update: 2018-03-31
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: gromacs/src/testutils/TestMacros.cmake
+===================================================================
+--- gromacs.orig/src/testutils/TestMacros.cmake
++++ gromacs/src/testutils/TestMacros.cmake
+@@ -103,7 +103,7 @@ function (gmx_register_gtest_test NAME E
+         set(_timeout 30)
+         if (ARG_INTEGRATION_TEST)
+             list(APPEND _labels IntegrationTest)
+-            set(_timeout 120)
++            set(_timeout 600)
+             gmx_get_test_prefix_cmd(_prefix_cmd IGNORE_LEAKS)
+         else()
+             list(APPEND _labels UnitTest)

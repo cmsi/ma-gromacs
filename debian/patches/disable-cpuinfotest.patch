@@ -1,0 +1,20 @@
+Description: Disable CpuInfoTest.SupportLevel test
+ This test is still a hard failure on less common architectures instead of
+ a warning.  Disable for now, as it should not fail the build.
+Author: Nicholas Breen
+Bug: http://redmine.gromacs.org/issues/1987
+Last-Update: 2016-07-15
+
+Index: gromacs-2016~rc1/src/gromacs/hardware/tests/CMakeLists.txt
+===================================================================
+--- gromacs-2016~rc1.orig/src/gromacs/hardware/tests/CMakeLists.txt
++++ gromacs-2016~rc1/src/gromacs/hardware/tests/CMakeLists.txt
+@@ -33,5 +33,7 @@
+ # the research papers on the package. Check out http://www.gromacs.org.
+ 
+ gmx_add_unit_test(HardwareUnitTests hardware-test
+-                  cpuinfo.cpp
+                   hardwaretopology.cpp)
++
++# cpuinfo.cpp disabled in Debian patch pending resolution of
++# http://redmine.gromacs.org/issues/1987

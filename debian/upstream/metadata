@@ -1,0 +1,40 @@
+Name: GROMACS
+Reference:
+ - Author: Berk Hess and Carsten Kutzner and David van der Spoel and Erik Lindahl
+   Title: "GROMACS 4: Algorithms for Highly Efficient, Load-Balanced, and Scalable Molecular Simulation"
+   Journal: J. Chem. Theory Comput.
+   Year: 2008
+   Volume: 4
+   Number: 3
+   Pages: 435-447
+   URL: http://pubs.acs.org/doi/abs/10.1021/ct700301q
+   eprint: http://pubs.acs.org/doi/pdfplus/10.1021/ct700301q
+   DOI: 10.1021/ct700301q
+ - Author: Erik Lindahl and Berk Hess and David van der Spoel
+   Title: "GROMACS 3.0: A Package for Molecular Simulation and Trajectory Analysis"
+   Journal: J Mol Model.
+   Year: 2001
+   Volume: 7
+   Number: 8
+   Pages: 306-17
+   DOI: 10.1007/s008940100045
+   URL: http://www.springerlink.com/content/r894b1jx35la6eja/
+   eprint: http://www.springerlink.com/content/r894b1jx35la6eja/fulltext.pdf
+ - Author: David van der Spoel and Erik Lindahl and Berk Hess and Gerrit Groenhof and Alan E. Mark and Herman J. C. Berendsen
+   Title: "GROMACS: Fast, Flexible, and Free"
+   Journal: J Comput Chem.
+   Year: 2005
+   Volume: 26
+   Number: 16
+   Pages: 1701-18
+   PMID: 16211538
+   DOI: 10.1002/jcc.20291
+   URL: http://onlinelibrary.wiley.com/doi/10.1002/jcc.20291/abstract
+   eprint: http://onlinelibrary.wiley.com/doi/10.1002/jcc.20291/pdf
+Registry:
+ - Name: OMICtools
+   Entry: OMICS_05081
+ - Name: bio.tools
+   Entry: gromacs
+ - Name: SciCrunch
+   Entry: SCR_014565

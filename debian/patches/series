@@ -1,0 +1,8 @@
+readme.patch
+copyright-file.patch
+reproducible-builds.patch
+doxygen.patch
+disable-cpuinfotest.patch
+hurd-disable-numa-test.patch
+mdrun-test-timeout.patch
+sphinx-version-detect.patch

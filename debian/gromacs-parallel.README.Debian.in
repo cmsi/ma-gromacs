@@ -1,0 +1,15 @@
+gromacs with #MPIPROG# support for Debian
+-----------------------------------------------------------------------
+
+This package contains the MPI-enabled version of the GROMACS molecular
+dynamics engine, compiled for use with #MPIPROG#.  The binary is named
+"mdrun_mpi.#MPIABBR#", though it is aliased to "mdrun_mpi".  For non-MPI
+applications, use the single-threaded "gmx mdrun" in the gromacs package.
+
+Versions of mdrun_mpi compiled for OpenMPI and MPICH can be installed
+in parallel.  In this case, the OpenMPI build will take priority as
+the default version (the one that controls the mdrun_mpi alias) --
+you may change this with update-alternatives(8).
+
+ -- Nicholas Breen <nbreen@debian.org>, Fri, 21 Oct 2005 11:27:27 -0400
+                                revised Wed, 02 Jul 2014 20:11:25 -0700

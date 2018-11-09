@@ -1,0 +1,30 @@
+Description: Reproducible build modifications
+ By default, GROMACS embeds build time / host / username information.  This
+ patch replaces those with values compatible with reproducible builds
+ (https://wiki.debian.org/ReproducibleBuilds).
+Author: Nicholas Breen
+Forwarded: not-needed
+Last-Update: 2016-02-20
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/cmake/gmxSetBuildInformation.cmake
++++ b/cmake/gmxSetBuildInformation.cmake
+@@ -53,6 +53,9 @@
+ include(gmxDetectCpu)
+ 
+ function(gmx_set_build_information)
++    set(BUILD_USER    "buildd\@debian [CMAKE]" CACHE INTERNAL "Build user")
++    execute_process( COMMAND "dpkg-parsechangelog -S Date" WORKING_DIRECTORY ../.. OUTPUT_VARIABLE TMP_TIME    OUTPUT_STRIP_TRAILING_WHITESPACE)
++    set(BUILD_TIME "${TMP_TIME}" CACHE INTERNAL "Build date & time")
+     if(NOT BUILD_USER)
+         if(CMAKE_HOST_UNIX)
+             execute_process( COMMAND whoami OUTPUT_VARIABLE TMP_USER OUTPUT_STRIP_TRAILING_WHITESPACE)
+@@ -73,7 +76,7 @@ function(gmx_set_build_information)
+ 
+     if(NOT BUILD_HOST)
+         if(CMAKE_HOST_UNIX)
+-            execute_process( COMMAND uname -srm OUTPUT_VARIABLE TMP_HOST OUTPUT_STRIP_TRAILING_WHITESPACE)
++            execute_process( COMMAND uname -sm OUTPUT_VARIABLE TMP_HOST OUTPUT_STRIP_TRAILING_WHITESPACE)
+         else()
+             set(TMP_HOST "${CMAKE_HOST_SYSTEM} ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+         endif()

@@ -1,0 +1,163 @@
+Source: gromacs
+Section: science
+Priority: optional
+Maintainer: Debichem Team <debichem-devel@lists.alioth.debian.org>
+Uploaders: Nicholas Breen <nbreen@debian.org>
+Build-Depends: chrpath,
+               cmake,
+               debhelper (>= 10),
+               libblas-dev,
+               libboost-dev,
+               libfftw3-dev,
+               liblapack-dev,
+               libmpich-dev (>= 3.0.4-6),
+               libopenmpi-dev (>= 1.10.2-7),
+               libtinyxml-dev,
+               libx11-dev,
+               mpich,
+               openmpi-bin,
+               zlib1g-dev
+Build-Depends-Indep: doxygen,
+                     ghostscript,
+                     graphviz,
+                     imagemagick,
+                     mscgen,
+                     python-sphinx (>= 1.4.1),
+                     rdfind,
+                     symlinks,
+                     texlive-fonts-recommended,
+                     texlive-latex-base,
+                     texlive-latex-extra
+Rules-Requires-Root: no
+Standards-Version: 4.2.0
+Vcs-Browser: https://salsa.debian.org/debichem-team/gromacs
+Vcs-Git: https://salsa.debian.org/debichem-team/gromacs.git
+Homepage: http://www.gromacs.org/
+
+Package: gromacs
+Architecture: any
+Depends: gromacs-data (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}, sse2-support [any-i386], neon-support [armhf]
+Recommends: cpp
+Suggests: pymol
+Description: Molecular dynamics simulator, with building and analysis tools
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+
+Package: gromacs-data
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Recommends: gromacs
+Suggests: tcsh | c-shell
+Conflicts: gromacs-doc
+Breaks: gromacs (<< 3.3.3-1)
+Replaces: gromacs-doc
+Description: GROMACS molecular dynamics sim, data and documentation
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+ .
+ This package contains architecture-independent topology and force field
+ data, documentation, man pages, and example files.
+
+Package: libgromacs3
+Architecture: any
+Multi-Arch: same
+Section: libs
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Breaks: gromacs (<< 5.1-1~)
+Description: GROMACS molecular dynamics sim, shared libraries
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+ .
+ This package contains the shared library, libgromacs.
+
+Package: libgromacs-dev
+Architecture: any
+Section: libdevel
+Depends: fftw3-dev,
+         libgromacs3 (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: gromacs-data
+Suggests: gromacs-mpich (= ${binary:Version}) | gromacs-openmpi (= ${binary:Version}) [alpha amd64 arm64 armel armhf hppa hurd-i386 i386 ia64 kfreebsd-amd64 kfreebsd-i386 mips mips64 mips64el mipsel powerpc powerpcspe ppc64 ppc64el s390x sparc sparc64 x32],
+          libmpich-dev,
+          libx11-dev,
+          zlib1g-dev
+Replaces: gromacs-dev (<< 5.1-1~)
+Breaks: gromacs-dev (<< 5.1-1~)
+Description: GROMACS molecular dynamics sim, development kit
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+ .
+ This package contains header files and static libraries for development
+ purposes, plus sample Makefiles.  Development components for MPI-enabled
+ GROMACS builds also require their respective packages.
+
+Package: gromacs-mpich
+Architecture: any
+Depends: mpich, ${misc:Depends}, ${shlibs:Depends}
+Recommends: gromacs
+Suggests: gromacs-data
+Description: Molecular dynamics sim, binaries for MPICH parallelization
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+ .
+ This package contains only the core simulation engine with parallel
+ support using the MPICH (v3) interface.  It is suitable for nodes of a
+ processing cluster, or for multiprocessor machines.
+
+Package: gromacs-openmpi
+Architecture: any
+Depends: openmpi-bin (>= 1.2.3), ${misc:Depends}, ${shlibs:Depends}
+Recommends: gromacs
+Suggests: gromacs-data
+Replaces: gromacs-lam
+Description: Molecular dynamics sim, binaries for OpenMPI parallelization
+ GROMACS is a versatile package to perform molecular dynamics, i.e. simulate
+ the Newtonian equations of motion for systems with hundreds to millions of
+ particles.
+ .
+ It is primarily designed for biochemical molecules like proteins and lipids
+ that have a lot of complicated bonded interactions, but since GROMACS is
+ extremely fast at calculating the nonbonded interactions (that usually
+ dominate simulations) many groups are also using it for research on non-
+ biological systems, e.g. polymers.
+ .
+ This package contains only the core simulation engine with parallel
+ support using the OpenMPI interface.  It is suitable for nodes of a
+ processing cluster, or for multiprocessor machines.

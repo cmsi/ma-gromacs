@@ -1,0 +1,31 @@
+Description: Install only a single copyright file
+ Avoid duplication of COPYING and debian/copyright.  A symlink is provided
+ between the two.
+Author: Nicholas Breen
+Origin: vendor
+Forwarded: not-needed
+Last-Update: 2015-09-26
+---
+Index: gromacs/CMakeLists.txt
+===================================================================
+--- gromacs.orig/CMakeLists.txt
++++ gromacs/CMakeLists.txt
+@@ -85,6 +85,9 @@ set(build_types_with_explicit_flags RELE
+ 
+ set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS ON)
+ 
++# Debian specific, see debian/patches/copyright-file.patch
++set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/debian/copyright")
++
+ include(gmxCTestUtilities)
+ gmx_ctest_init()
+ 
+@@ -868,7 +871,7 @@ endif()
+ 
+ #COPYING file: Only necessary for binary distributions.
+ #Simpler to always install.
+-install(FILES COPYING DESTINATION ${GMX_INSTALL_GMXDATADIR} COMPONENT data)
++install(FILES DESTINATION ${GMX_INSTALL_GMXDATADIR} COMPONENT data)
+ 
+ if (GMX_BUILD_FOR_COVERAGE)
+     # Code heavy with asserts makes conditional coverage close to useless metric,

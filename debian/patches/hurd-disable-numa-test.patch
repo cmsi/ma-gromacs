@@ -1,0 +1,25 @@
+Description: [hurd-i386] Disable HardwareTopologyTest.NumaCacheSelfconsistency
+ On Hurd only, this test reports zero memory.  lstopo(1) looks normal,
+ so this is probably just a hwloc limitation; disable until solved properly
+ either here or in hwloc.
+Author: Nicholas Breen
+Last-Update: 2016-08-19
+
+Index: gromacs-2016/src/gromacs/hardware/tests/hardwaretopology.cpp
+===================================================================
+--- gromacs-2016.orig/src/gromacs/hardware/tests/hardwaretopology.cpp
++++ gromacs-2016/src/gromacs/hardware/tests/hardwaretopology.cpp
+@@ -164,10 +164,13 @@ TEST(HardwareTopologyTest, NumaCacheSelf
+         EXPECT_EQ(uniqueProcessorsinNumaNudes, hwTop.machine().logicalProcessorCount);
+ 
+         // We must have some memory in a numa node
++	// Doesn't detect memory on Hurd at the moment, it seems
++	#ifndef __GNU__
+         for (auto &n : hwTop.machine().numa.nodes)
+         {
+             EXPECT_GT(n.memory, 0);
+         }
++	#endif // __GNU__
+ 
+         // Check latency matrix size and contents
+         EXPECT_GT(hwTop.machine().numa.baseLatency, 0);

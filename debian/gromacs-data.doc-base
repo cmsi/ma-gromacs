@@ -1,0 +1,14 @@
+Document: gromacs
+Title: Gromacs Manual
+Author: David van der Spoel <spoel@gromacs.org> and others
+Abstract: This manual describes the configuration and use of gromacs,
+ a program designed to perform molecular dynamics simulations extremely
+ quickly.
+Section: Science/Chemistry
+
+Format: HTML
+Index: /usr/share/doc/gromacs/html/index.html
+Files: /usr/share/doc/gromacs/html/*.html /usr/share/doc/gromacs/html/user-guide/*.html
+
+Format: PDF
+Files: /usr/share/doc/gromacs/html/manual*.pdf

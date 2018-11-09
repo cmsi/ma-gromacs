@@ -1,0 +1,4 @@
+# This override is the worst solution, except for all the other ones.
+# For background, see #736360, #736432, and a number of threads over the years,
+# such as https://lists.debian.org/debian-devel/2014/10/msg00774.html
+gromacs-data: embedded-javascript-library
