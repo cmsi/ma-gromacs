@@ -10,8 +10,8 @@ Build-Depends: chrpath,
                libboost-dev,
                libfftw3-dev,
                liblapack-dev,
-               libmpich-dev (>= 3.0.4-6),
-               libopenmpi-dev (>= 1.10.2-7),
+               libmpich-dev,
+               libopenmpi-dev,
                libtinyxml-dev,
                libx11-dev,
                mpich,
@@ -22,7 +22,7 @@ Build-Depends-Indep: doxygen,
                      graphviz,
                      imagemagick,
                      mscgen,
-                     python-sphinx (>= 1.4.1),
+                     python-sphinx,
                      rdfind,
                      symlinks,
                      texlive-fonts-recommended,
@@ -36,7 +36,7 @@ Homepage: http://www.gromacs.org/
 
 Package: gromacs
 Architecture: any
-Depends: gromacs-data (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}, sse2-support [any-i386], neon-support [armhf]
+Depends: gromacs-data (= ${source:Version}), ${misc:Depends}, ${shlibs:Depends}, neon-support [armhf]
 Recommends: cpp
 Suggests: pymol
 Description: Molecular dynamics simulator, with building and analysis tools

@@ -1,5 +1,11 @@
+gromacs (1:2018.3-2) unstable; urgency=medium
+
+  * Remove dependency on sse2-support for i386
+
+ -- Synge Todo <wistaria@phys.s.u-tokyo.ac.jp>  Tue, 14 May 2019 12:01:03 +0900
+
 gromacs (1:2018.3-1) unstable; urgency=medium
 
-  * Impot 2018.3-1 from sid
+  * Import 2018.3-1 from sid
 
  -- Synge Todo <wistaria@phys.s.u-tokyo.ac.jp>  Thu, 01 Nov 2018 12:06:37 +0900
